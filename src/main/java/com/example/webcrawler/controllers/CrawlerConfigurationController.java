@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = "api/v1/crawler")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class CrawlerConfigurationController implements CrawlerConfigurationControllerApi {
 
     @Autowired

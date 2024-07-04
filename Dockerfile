@@ -39,28 +39,3 @@ RUN wget https://storage.googleapis.com/chrome-for-testing-public/126.0.6478.126
 ADD personal-project-428121-3c114e11c925.json /root/home/personal-project-428121-3c114e11c925.json
 ENV GOOGLE_APPLICATION_CREDENTIALS=/root/home/personal-project-428121-3c114e11c925.json
 
-# Descarcarea și instalarea Chrome
-#RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-#    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
-#    apt-get update && \
-#    apt-get install -y google-chrome-stable
-
-#RUN wget https://google-chrome.en.uptodown.com/windows/post-download/103415500 && \
-#    unzip google-chrome-114-0-5735-106.zip && rm google-chrome-114-0-5735-106.zip && \
-#    apt-get update && \
-#    apt-get install -y Installers/GoogleChromeStandaloneEnterprise64.msi
-
-#RUN wget https://www.slimjet.com/chrome/download-chrome.php?file=files%2F90.0.4430.72%2Fgoogle-chrome-stable_current_amd64.deb
-#RUN dpkg -i download-chrome.php?file=files%2F90.0.4430.72%2Fgoogle-chrome-stable_current_amd64.deb; exit 0
-#RUN apt --fix-broken install -y
-#RUN dpkg  -i download-chrome.php?file=files%2F90.0.4430.72%2Fgoogle-chrome-stable_current_amd64.deb
-#RUN rm download-chrome.php?file=files%2F90.0.4430.72%2Fgoogle-chrome-stable_current_amd64.deb
-#
-## Descarcarea și instalarea ChromeDriver
-#RUN wget https://chromedriver.storage.googleapis.com/90.0.4430.24/chromedriver_linux64.zip && \
-#    unzip chromedriver_linux64.zip && rm chromedriver_linux64.zip && \
-#    mv chromedriver /usr/bin/chromedriver && \
-#    chmod +x /usr/bin/chromedriver
-
-
-

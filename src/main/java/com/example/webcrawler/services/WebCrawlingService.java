@@ -155,7 +155,7 @@ public class WebCrawlingService {
                 isFirstCookies = pressButtonsOnPage(driver, crawlerConfiguration, isFirstCookies, crawlerConfiguration.getProductCookiesButtonPaths(), url, PRODUCT_COOKIES_BUTTON, true, 3, 20, timeoutMilis);
 
                 try {
-                    isFirstOther = pressButtonsOnPage(driver, crawlerConfiguration, isFirstOther, crawlerConfiguration.getProductOtherButtonPaths(), url, PRODUCT_OTHER_BUTTON, false, 2, 200, 500);
+                    isFirstOther = pressButtonsOnPage(driver, crawlerConfiguration, isFirstOther, crawlerConfiguration.getProductOtherButtonPaths(), url, PRODUCT_OTHER_BUTTON, false, 2, 10, 500);
                 } catch (NotFoundException notFoundException) {
                     errorList.add(new Error(FieldType.productOtherButtonPath.toString(), crawlerConfiguration.getProductOtherButtonPaths().toString(), NOT_FOUND_MESSAGE, url));
                 }
@@ -396,9 +396,9 @@ public class WebCrawlingService {
 
         int iterations = 0;
 //        Utils.loadPage(driver, 0.1f, 50);
-        clickButton(crawlerConfiguration, driver, confingNameClick, false, url);
-        while (!isFoundAdvanced(xPathsElement, driver, crawlerConfiguration) && iterations < maxIterations) {
-            clickButton(crawlerConfiguration, driver, confingNameClick, false, url);
+        clickButtonExpand(crawlerConfiguration, driver, confingNameClick, false, url);
+        while (!isFound(xPathsElement, driver, true) && iterations < maxIterations) {
+            clickButtonExpand(crawlerConfiguration, driver, confingNameClick, false, url);
 
             //Utils.loadPage(driver, 0.1f, 50);
             try {
@@ -411,23 +411,18 @@ public class WebCrawlingService {
 
             iterations++;
         }
+        if (!isFound(xPathsElement, driver, true))
+            loadAdvancedElementWithClick(driver, searchElementInDetailView(crawlerConfiguration, driver, configName, false));
 
-        if (!isFoundAdvanced(xPathsElement, driver, crawlerConfiguration)) {
+        if (!isFound(xPathsElement, driver, true)) {
             throw new NotFoundException(configName + "not found");
         }
     }
 
-    private boolean isFoundAdvanced(List<String> xPathsElement, WebDriver driver, CrawlerConfiguration crawlerConfiguration) {
-        if (Utils.getStoreNameFromUrl(crawlerConfiguration.getMainPageUrl()).equals("bofrost")) {
-            for (String xpath : xPathsElement) {
-                WebElement webElement = findElementByXpath(driver, xpath, true);
-                if (webElement != null && webElement.getAttribute("class").equals("tab")) {
-                    return true; // Așteptarea se încheie când cel puțin unul dintre XPath-uri devine adevărat
-                }
-            }
-            return false;
-        } else return isFound(xPathsElement, driver, true);
+    private void loadAdvancedElementWithClick(WebDriver driver, WebElement webElement) {
+        Utils.clickButtonOnPage(driver, webElement, 0.1f);
     }
+
 
     private static void waitForMultipleXPaths(WebDriver driver, Duration timeout, List<String> xPaths) {
         WebDriverWait wait = new WebDriverWait(driver, timeout);
@@ -515,24 +510,14 @@ public class WebCrawlingService {
     private WebElement searchElementInDetailViewAdvanced(CrawlerConfiguration crawlerConfiguration, WebDriver driver, String configName, boolean isText) {
 //        searching for web element in case of multiple xpath
 
-        if (Utils.getStoreNameFromUrl(crawlerConfiguration.getMainPageUrl()).equals("bofrost")) {
-            List<String> xPathList = getXPathsByConfigName(crawlerConfiguration, configName);
-            for (String xPath : xPathList) {
-                WebElement webElement = findElementByXpath(driver, xPath, isText);
-                if (webElement != null && webElement.getAttribute("class").equals("tab")) return webElement;
-            }
-            logger.warn("searchElementInDetailViewAdvanced(): None of the xPaths was working, retailerName={}, configName={}, xPathList={} ", crawlerConfiguration.getRetailerName(), configName, xPathList);
-            return null;
-        } else {
-
-            List<String> xPathList = getXPathsByConfigName(crawlerConfiguration, configName);
-            for (String xPath : xPathList) {
-                WebElement webElement = findElementByXpath(driver, xPath, isText);
-                if (webElement != null) return webElement;
-            }
-            logger.warn("searchElementInDetailViewAdvanced(): None of the xPaths was working, retailerName={}, configName={}, xPathList={} ", crawlerConfiguration.getRetailerName(), configName, xPathList);
-            return null;
+        List<String> xPathList = getXPathsByConfigName(crawlerConfiguration, configName);
+        for (String xPath : xPathList) {
+            WebElement webElement = findElementByXpath(driver, xPath, isText);
+            if (webElement != null) return webElement;
         }
+        logger.warn("searchElementInDetailViewAdvanced(): None of the xPaths was working, retailerName={}, configName={}, xPathList={} ", crawlerConfiguration.getRetailerName(), configName, xPathList);
+        return null;
+
     }
 
 
@@ -559,32 +544,18 @@ public class WebCrawlingService {
     private String getElementTextAdvanced(CrawlerConfiguration crawlerConfiguration, WebDriver driver, String configName, boolean mandatory) {
         logger.info("getElementTextAdvanced(): -> ENTER retailerName={}, configName={}", crawlerConfiguration.getRetailerName(), configName);
 
-        if (Utils.getStoreNameFromUrl(crawlerConfiguration.getMainPageUrl()).equals("bofrost")) {
-            try {
-                WebElement webElement = searchElementInDetailViewAdvanced(crawlerConfiguration, driver, configName, true);
-                if (webElement == null || !webElement.getAttribute("class").equals("tab")) {
-                    throw new RuntimeException(configName + " not found");
-                }
-                logger.info("getElementTextAdvanced(): -> EXIT retailerName={}, configName={}", crawlerConfiguration.getRetailerName(), configName);
-                return webElement.getText();
-            } catch (Exception e) {
-                logger.error("getElementText(): configName={} not found", configName);
-                throw e;
+        try {
+            WebElement webElement = searchElementInDetailView(crawlerConfiguration, driver, configName, true);
+            if (webElement == null) {
+                throw new RuntimeException(configName + " not found");
             }
-        } else {
-
-            try {
-                WebElement webElement = searchElementInDetailView(crawlerConfiguration, driver, configName, true);
-                if (webElement == null) {
-                    throw new RuntimeException(configName + " not found");
-                }
-                logger.info("getElementTextAdvanced(): -> EXIT retailerName={}, configName={}", crawlerConfiguration.getRetailerName(), configName);
-                return webElement.getText();
-            } catch (Exception e) {
-                logger.error("getElementText(): configName={} not found", configName);
-                throw e;
-            }
+            logger.info("getElementTextAdvanced(): -> EXIT retailerName={}, configName={}", crawlerConfiguration.getRetailerName(), configName);
+            return webElement.getText();
+        } catch (Exception e) {
+            logger.error("getElementText(): configName={} not found", configName);
+            throw e;
         }
+
     }
 
 
@@ -638,6 +609,39 @@ public class WebCrawlingService {
             }
 
         } else if (mandatory) throw new ClickException("Error getting " + configName);
+    }
+
+    private void clickButtonExpand(CrawlerConfiguration crawlerConfiguration, WebDriver driver, String configName, boolean mandatory, String url) {
+        logger.info("clickButton(): -> ENTER retailerName={}, configName={}", crawlerConfiguration.getRetailerName(), configName);
+        WebElement webElement = searchElementInDetailView(crawlerConfiguration, driver, configName, false);
+        if (webElement != null) {
+            try {
+                //ThreadSleeper.sleep(3f);
+                logger.info("clicked button={}", webElement.getText());
+
+                try {
+                    webElement.click();
+                } catch (Exception exception) {
+                    logger.error("clickButton(): exception while pressing button  errorMessage={}", exception.getMessage());
+
+                    clickButton(crawlerConfiguration, driver, PRODUCT_OTHER_BUTTON, false, url);
+
+                }
+
+                if (!Utils.getBaseItemUrl(driver.getCurrentUrl()).contains(Utils.getBaseItemUrl(url)))
+                    driver.navigate().back();
+
+
+                //System.out.println(Utils.getBaseItemUrl(driver.getCurrentUrl()));
+                ThreadSleeper.sleep(3f);
+                logger.info("clickButton(): -> EXIT retailerName={}, configName={}", crawlerConfiguration.getRetailerName(), configName);
+            } catch (Exception e) {
+                logger.warn("Error pressing " + configName + " " + e.getMessage() + " " + webElement.getText());
+                if (mandatory) throw new ClickException(e.getMessage());
+            }
+
+        } else if (mandatory) throw new ClickException("Error getting " + configName);
+
     }
 
 

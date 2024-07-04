@@ -20,7 +20,7 @@ import static java.util.stream.Collectors.toList;
 
 @RestController
 @RequestMapping(path = "api/v1/product")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class ProductController implements ProductControllerApi {
 
     private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
